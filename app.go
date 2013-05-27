@@ -8,6 +8,7 @@ import (
   "database/sql"
   "code.google.com/p/go.crypto/bcrypt"
   "github.com/gorilla/sessions"
+  "github.com/DanielNill/discuss_tech_jobs/models"
 )
 
 //session
@@ -30,7 +31,6 @@ func landing(w http.ResponseWriter, r *http.Request){
   //page := make([]interface{}, 0, 1)
   session, _ := store.Get(r, "session-name")
   user_id, _ := session.Values["user_id"]
-  fmt.Println(user_id)
   //page = append(page, map[string] interface {"user_id": user_id})
   posts := make([]Post, 0, 1)
   conn := OpenConnection()
@@ -48,7 +48,7 @@ func landing(w http.ResponseWriter, r *http.Request){
   //page = append(page, map[String] slice {"pages": pages })
   //fmt.Println(page)
   t, _ := template.ParseFiles("home.html")
-  t.Execute(w, nil)
+  t.Execute(w, posts)
 }
 
 func newPostForm(w http.ResponseWriter, r *http.Request){

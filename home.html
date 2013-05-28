@@ -4,10 +4,13 @@
 <body>
 discuss tech jobs
 <a href="/new_post">new post</a>
-<a href="/sign_up_in">sign in</a>
-<a href="/logout">logout</a>
-{{ range . }}
- <p>{{ .Title }}</p>
+{{ if .user_id }}
+  <a href="/logout">logout</a>
+{{ else }}
+  <a href="/sign_up_in">sign in</a>
+{{ end }}
+{{ range .posts }}
+  <div>{{ .Title }} by {{ .Author }}</div>
 {{ end }}
 </bod>
 </html>

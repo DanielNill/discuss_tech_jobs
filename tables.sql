@@ -1,5 +1,5 @@
 CREATE TABLE Posts (
-  post_id BIGSERIAL PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   title VARCHAR(100) NOT NULL,
   points INT DEFAULT 0,
   user_id INT NOT NULL,
@@ -8,23 +8,17 @@ CREATE TABLE Posts (
 )
 
 CREATE TABLE Users (
-  user_id BIGSERIAL PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   email VARCHAR(50) NOT NULL,
-<<<<<<< HEAD
   password_hash VARCHAR(100) NOT NULL,
   salt VARCHAR(25) NOT NULL,
   points INT DEFAULT 0,
-=======
-  password_hash VARCHAR(50) NOT NULL,
-  salt VARCHAR(25) NOT NULL,
-  points INT DEFAULT 0
->>>>>>> 762d50efe34abdf20d83518d8fd316907d382200
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
 
 CREATE TABLE Comments (
-  comment_id BIGSERIAL PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   user_id INT NOT NULL,
   parent_comment_id INT DEFAULT NULL,
   text TEXT,

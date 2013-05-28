@@ -14,16 +14,6 @@ import (
 //session
 var store = sessions.NewCookieStore([]byte("auth_token_goes_here"))
 
-// models
-type Post struct {
-  Id int
-  Title string
-  Points int
-  User
-  CreatedAt string
-  UpdatedAt string
-}
-
 type Comment struct {
   Id int
 
@@ -40,7 +30,7 @@ func OpenConnection() *sql.DB {
 func landing(w http.ResponseWriter, r *http.Request){
   session, _ := store.Get(r, "session-name")
   user_id, _ := session.Values["user_id"]
-  posts := make([]Post, 0, 1)
+  posts := make([]models.Post, 0, 1)
   conn := OpenConnection()
   defer conn.Close()
   rows, err := conn.Query("SELECT * FROM posts p JOIN users u ON p.user_id = u.user_id LIMIT 100")
@@ -51,7 +41,7 @@ func landing(w http.ResponseWriter, r *http.Request){
       var post_id, points, user_id int
       var title, created_at, updated_at string
       rows.Scan(&post_id, &title, &points, &user_id, &created_at, &updated_at)
-      posts = append(posts, Post{Title: title, Author: models.User{Id: user_id}})
+      posts = append(posts, models.Post{Title: title, User: models.User{Id: user_id}})
     }
   }
   fmt.Println(posts)

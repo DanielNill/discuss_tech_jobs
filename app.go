@@ -14,10 +14,6 @@ import (
 //session
 var store = sessions.NewCookieStore([]byte("auth_token_goes_here"))
 
-type Comment struct {
-  Id int
-
-}
 
 func OpenConnection() *sql.DB {
   conn, err := sql.Open("postgres", "user=Daniel password=*Mrbobn1 dbname=discuss_dev_jobs sslmode=disable")
@@ -28,20 +24,21 @@ func OpenConnection() *sql.DB {
 }
 
 func landing(w http.ResponseWriter, r *http.Request){
-  session, _ := store.Get(r, "session-name")
+  session, _ := store.Get(r, "session")
   user_id, _ := session.Values["user_id"]
   posts := make([]models.Post, 0, 1)
   conn := OpenConnection()
   defer conn.Close()
-  rows, err := conn.Query("SELECT * FROM posts p JOIN users u ON p.user_id = u.user_id LIMIT 100")
+  rows, err := conn.Query("SELECT p.id, p.title, p.points, p.created_at, p.updated_at, u.id, u.email FROM posts p JOIN users u ON p.user_id = u.id LIMIT 100")
   if err != nil {
     fmt.Println(err)
   } else {
     for rows.Next() {
-      var post_id, points, user_id int
-      var title, created_at, updated_at string
-      rows.Scan(&post_id, &title, &points, &user_id, &created_at, &updated_at)
-      posts = append(posts, models.Post{Title: title, User: models.User{Id: user_id}})
+      post := new(models.Post)
+      user := new(models.User)
+      rows.Scan(&post.Id, &post.Title, &post.Points, &post.CreatedAt, &post.UpdatedAt, &user.Id, &user.Email)
+      post.User = *user
+      posts = append(posts, *post)
     }
   }
   fmt.Println(posts)
@@ -61,7 +58,8 @@ func newPostForm(w http.ResponseWriter, r *http.Request){
 
 func createNewPost(w http.ResponseWriter, r *http.Request){
   conn := OpenConnection()
-  _, err := conn.Exec("INSERT INTO posts (title, user_id) VALUES ('" + r.FormValue("title") + "', 1)")
+  session, _ := store.Get(r, "session")
+  _, err := conn.Exec("INSERT INTO posts (title, user_id) VALUES ($1, $2)", r.FormValue("title"), session.Values["user_id"])
   if err != nil {
     fmt.Println(err)
   }
@@ -78,10 +76,10 @@ func createNewUser(w http.ResponseWriter, r *http.Request){
   defer conn.Close()
   email := r.FormValue("email")
   password, _ := bcrypt.GenerateFromPassword([]byte(r.FormValue("password")), bcrypt.DefaultCost)
-  row := conn.QueryRow("INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING user_id", email, password)
+  row := conn.QueryRow("INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id", email, password)
   var user_id int
   row.Scan(&user_id)
-  session, _ := store.Get(r, "session-name")
+  session, _ := store.Get(r, "session")
   session.Values["user_id"] = user_id
   session.Save(r, w)
   http.Redirect(w, r, "/", http.StatusFound)
@@ -91,15 +89,14 @@ func signIn(w http.ResponseWriter, r *http.Request){
   conn := OpenConnection()
   defer conn.Close()
   email := r.FormValue("email")
-  row := conn.QueryRow("SELECT user_id, password FROM users WHERE email = $1", email)
+  row := conn.QueryRow("SELECT id, password FROM users WHERE email = $1", email)
   var user_id int
-  var password string
-  fmt.Println(row)
-  row.Scan(&user_id, &password)
-  fmt.Println(user_id)
-  fmt.Println(password)
+  var hashed_password string
+  row.Scan(&user_id, &hashed_password)
+  // need to check password against hash
+  fmt.Println(hashed_password)
   if user_id > 0 {
-    session, _ := store.Get(r, "session-name")
+    session, _ := store.Get(r, "session")
     session.Values["user_id"] = user_id
     session.Save(r, w)
     http.Redirect(w, r, "/", http.StatusFound)
@@ -109,7 +106,7 @@ func signIn(w http.ResponseWriter, r *http.Request){
 }
 
 func logout(w http.ResponseWriter, r *http.Request){
-  session, _ := store.Get(r, "session-name")
+  session, _ := store.Get(r, "session")
   session.Values["user_id"] = nil
   session.Save(r, w)
   http.Redirect(w, r, "/", http.StatusFound)

@@ -10,7 +10,9 @@ discuss tech jobs
   <a href="/sign_up_in">sign in</a>
 {{ end }}
 {{ range .posts }}
-  <div>{{ .Title }} by {{ .Id }}</div>
+  <div>
+    <a href="/post/{{ .Id }}">{{ .Title }} by {{ .User.Email }}</a>
+  </div>
 {{ end }}
 </bod>
 </html>

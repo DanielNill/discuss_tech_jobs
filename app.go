@@ -29,19 +29,18 @@ func landing(w http.ResponseWriter, r *http.Request){
   posts := make([]models.Post, 0, 1)
   conn := OpenConnection()
   defer conn.Close()
-  rows, err := conn.Query("SELECT p.id, p.title, p.points, p.created_at, p.updated_at, u.id, u.email FROM posts p JOIN users u ON p.user_id = u.id LIMIT 100")
+  rows, err := conn.Query("SELECT u.email, p.title, p.id FROM posts p, users u WHERE p.user_id = u.id LIMIT 100")
   if err != nil {
     fmt.Println(err)
   } else {
     for rows.Next() {
-      post := new(models.Post)
+      var post models.Post
       user := new(models.User)
-      rows.Scan(&post.Id, &post.Title, &post.Points, &post.CreatedAt, &post.UpdatedAt, &user.Id, &user.Email)
-      post.User = *user
-      posts = append(posts, *post)
+      rows.Scan(&user.Email, &post.Title, &post.Id)
+      post.User = user
+      posts = append(posts, post)
     }
   }
-  fmt.Println(posts)
   context := map[string]interface{}{
     "user_id": user_id,
     "posts": posts,
@@ -79,6 +78,7 @@ func createNewUser(w http.ResponseWriter, r *http.Request){
   row := conn.QueryRow("INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id", email, password)
   var user_id int
   row.Scan(&user_id)
+  fmt.Println(user_id)
   session, _ := store.Get(r, "session")
   session.Values["user_id"] = user_id
   session.Save(r, w)
@@ -89,7 +89,7 @@ func signIn(w http.ResponseWriter, r *http.Request){
   conn := OpenConnection()
   defer conn.Close()
   email := r.FormValue("email")
-  row := conn.QueryRow("SELECT id, password FROM users WHERE email = $1", email)
+  row := conn.QueryRow("SELECT id, password_hash FROM users WHERE email = $1", email)
   var user_id int
   var hashed_password string
   row.Scan(&user_id, &hashed_password)
@@ -112,6 +112,12 @@ func logout(w http.ResponseWriter, r *http.Request){
   http.Redirect(w, r, "/", http.StatusFound)
 }
 
+func showPost(w http.ResponseWriter, r *http.Request){
+  conn := OpenConnection()
+  defer conn.Close()
+  fmt.Println(r.FormValue("id"))
+}
+
 func main(){
   http.HandleFunc("/", landing)
   http.HandleFunc("/new_post", newPostForm)
@@ -120,5 +126,6 @@ func main(){
   http.HandleFunc("/sign_up_in", signUpInForm)
   http.HandleFunc("/sign_in", signIn)
   http.HandleFunc("/logout", logout)
+  http.HandleFunc("/post/:id", showPost)
   http.ListenAndServe(":3001", nil)
 }

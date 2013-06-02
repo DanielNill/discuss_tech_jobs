@@ -41,8 +41,14 @@ func landing(w http.ResponseWriter, r *http.Request){
 }
 
 func newPostForm(w http.ResponseWriter, r *http.Request){
-  t, _ := template.ParseFiles("new_post.html")
-  t.Execute(w, nil)
+  session, _ := store.Get(r, "session")
+  user_id, _ := session.Values["user_id"]
+  if user_id != nil {
+    t, _ := template.ParseFiles("new_post.html")
+    t.Execute(w, nil)
+  } else {
+    http.Redirect(w, r, "/sign_up_in", http.StatusFound)
+  }
 }
 
 func createNewPost(w http.ResponseWriter, r *http.Request){

@@ -1,6 +1,7 @@
 CREATE TABLE Posts (
   id BIGSERIAL PRIMARY KEY,
   title VARCHAR(100) NOT NULL,
+  text TEXT,
   points INT DEFAULT 0,
   user_id INT NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -19,9 +20,10 @@ CREATE TABLE Users (
 CREATE TABLE Comments (
   id BIGSERIAL PRIMARY KEY,
   user_id INT NOT NULL,
+  post_id INT NOT NULL,
   parent_comment_id INT DEFAULT NULL,
   text TEXT,
   points INT DEFAULT 0,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-)
+);

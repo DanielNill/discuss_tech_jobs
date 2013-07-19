@@ -1,0 +1,14 @@
+<html>
+<head>
+</head>
+<body>
+<form action="/create_new_comment" method="post">
+  <input type="hidden" name="post_id" value="{{ .parent_comment.PostId }}"/>
+  <input type="hidden" name="parent_comment_id" value="{{ .parent_comment.Id }}"/>
+  <textarea name="text"></textarea>
+  <input type="submit"/>
+</form>
+{{ range .comments }}
+  <div>{{ .Text }} by {{ .User.Email }}</div>
+{{ end }}
+</body>

@@ -1,0 +1,18 @@
+<html>
+<head>
+</head>
+<body>
+<a href="/">discuss tech jobs</a>
+<div>{{ .post.Title }}</div>
+<div>by {{ .post.User.Email }}</div>
+<form action="/create_new_comment" method="post">
+  <input type="hidden" name="user_id" value="{{ .post.User.Id }}" />
+  <input type="hidden" name="post_id" value="{{ .post.Id }}" />
+  <textarea name="text"></textarea>
+  <input type="submit"/>
+</form>
+{{ range .comments }}
+  <div>{{ .Text }} by {{ .User.Email }}<a href="/comments/{{ .Id }}/new">reply</a></div>
+{{ end }}
+</body>
+</html>
